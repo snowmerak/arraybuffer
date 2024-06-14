@@ -1,21 +1,20 @@
 package arraybuffer_test
 
 import (
-	"fmt"
 	"github.com/snowmerak/arraybuffer"
 	"sync"
 	"testing"
 )
 
 func TestArray_Append(t *testing.T) {
-	ab := arraybuffer.NewBuffer(3, 30)
-	a := ab.NewArray()
+	ab := arraybuffer.New(3, 30)
+	a := ab.List()
 
-	a.Append([]byte("hello, "))
-	a.Append([]byte("world! "))
-	a.Append([]byte("start, "))
-	a.Append([]byte("end! "))
-	a.Append([]byte("goodbye!"))
+	a.Write([]byte("hello, "))
+	a.Write([]byte("world! "))
+	a.Write([]byte("start, "))
+	a.Write([]byte("end! "))
+	a.Write([]byte("goodbye!"))
 	bs := a.Bytes()
 	if string(bs) != "hello, world! start, end! goodbye!" {
 		t.Errorf("unexpected result: %s", string(bs))
@@ -25,23 +24,25 @@ func TestArray_Append(t *testing.T) {
 }
 
 func TestArray_Append2(t *testing.T) {
-	ab := arraybuffer.NewBuffer(4096, 1048572)
-	a := ab.NewArray()
+	ab := arraybuffer.New(4096, 1048572)
 
 	wg := sync.WaitGroup{}
-	for i := 0; i < 4096; i++ {
+	for i := 0; i < 1024; i++ {
+		a := ab.List()
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			bs := make([]byte, 4096)
-			for j := 0; j < 4096; j++ {
+			bs := make([]byte, 4)
+			for j := 0; j < 4; j++ {
 				bs[j] = byte(i)
 			}
-			for j := 0; j < 255; j++ {
-				a.Append(bs)
+			for j := 0; j < 1024; j++ {
+				a.Write(bs)
 			}
 			b := a.Bytes()
-			fmt.Printf("len: %d\n", len(b))
+			if len(b) != 4096 {
+				t.Errorf("unexpected length: %d", len(b))
+			}
 			a.Reset()
 		}(i)
 	}
